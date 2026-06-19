@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLF Transport — prompty NanoBanana na zdjęcia</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-2: #141414;
+    --bg-3: #1C1C1C;
+    --accent: #FEAF03;
+    --text: #FFFFFF;
+    --text-2: rgba(255, 255, 255, 0.72);
+    --text-3: rgba(255, 255, 255, 0.55);
+    --border: rgba(255, 255, 255, 0.10);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, system-ui, "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 64px 32px 120px; }
+  header { margin-bottom: 56px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+  header h1 {
+    font-family: "Anton", Impact, sans-serif;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  header h1 .accent { color: var(--accent); }
+  header p {
+    color: var(--text-2);
+    max-width: 680px;
+    font-size: 16px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(254, 175, 3, 0.08);
+    border: 1px solid rgba(254, 175, 3, 0.25);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+  .toc {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 24px 28px;
+    margin-bottom: 64px;
+    border-radius: 4px;
+  }
+  .toc h2 {
+    font-family: "Anton", sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .toc ol {
+    list-style: none;
+    counter-reset: tocnum;
+    columns: 2;
+    column-gap: 32px;
+  }
+  .toc li {
+    counter-increment: tocnum;
+    padding: 4px 0;
+    break-inside: avoid;
+  }
+  .toc li::before {
+    content: counter(tocnum, decimal-leading-zero);
+    color: var(--text-3);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    margin-right: 10px;
+  }
+  .toc a { color: var(--text-2); text-decoration: none; transition: color .15s; }
+  .toc a:hover { color: var(--accent); }
+  .section-group {
+    margin-bottom: 64px;
+  }
+  .section-group__title {
+    font-family: "Anton", sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .prompt {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    scroll-margin-top: 24px;
+  }
+  .prompt__head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .prompt__num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+  .prompt h3 {
+    font-family: "Anton", sans-serif;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .prompt__where {
+    color: var(--text-3);
+    font-size: 13px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .prompt__where strong { color: var(--text-2); font-weight: 500; }
+  .prompt__concept {
+    color: var(--text-2);
+    font-size: 14px;
+    margin-bottom: 16px;
+    line-height: 1.6;
+    padding: 12px 16px;
+    background: rgba(254, 175, 3, 0.04);
+    border-left: 2px solid var(--accent);
+  }
+  .prompt__specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .spec {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--bg-3);
+    color: var(--text-2);
+    padding: 4px 9px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    overflow-x: auto;
+    margin-top: 8px;
+    position: relative;
+  }
+  pre code {
+    font-family: "JetBrains Mono", "Menlo", monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #E8E8E8;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #0A0A0A;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: opacity .15s;
+  }
+  .copy-btn:hover { opacity: 0.85; }
+  .copy-btn.copied { background: #4ADE80; }
+  .global-notes {
+    background: rgba(254, 175, 3, 0.06);
+    border: 1px solid rgba(254, 175, 3, 0.3);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin-bottom: 48px;
+  }
+  .global-notes h2 {
+    font-family: "Anton", sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .global-notes ul { padding-left: 18px; }
+  .global-notes li { padding: 4px 0; color: var(--text-2); }
+  .global-notes strong { color: var(--text); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 32px 16px 80px; }
+    .toc ol { columns: 1; }
+    .prompt { padding: 20px; }
+    pre { padding: 12px; }
+    pre code { font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>SLF Transport — <span class="accent">prompty NanoBanana</span><br>na profesjonalne zdjęcia</h1>
+  <p>Editorial / documentary aesthetic. Bez tandety, bez golden hour, bez kinfolk flat lay, bez ludzi pokazujących kciuki. Premium European removals brand — solidne, sprawdzone, "We Handle With Care".</p>
+  <div class="meta">
+    <span class="tag">14 promptów</span>
+    <span class="tag">EN · JSON</span>
+    <span class="tag">No text in images</span>
+    <span class="tag">Documentary / editorial</span>
+  </div>
+</header>
+
+<div class="global-notes">
+  <h2>Zasady wspólne dla wszystkich promptów</h2>
+  <ul>
+    <li><strong>Format/ratio ustawiaj w UI</strong> Freepik Spaces / NanoBanana, nie w prompcie</li>
+    <li><strong>Brand color</strong>: subtle yellow (#FEAF03) accent — hi-vis vest, signage, accent light. Nigdy nie dominuje, tylko zaznacza obecność marki</li>
+    <li><strong>Avoid</strong>: cottage garden bokeh, golden hour, kinfolk flat lay, stock-smile people looking at camera, thumbs up, perfectly white teeth, exaggerated handshakes</li>
+    <li><strong>Prefer</strong>: documentary photography, real moments, cinematic low-contrast, sodium street light, fluorescent garage, off-center compositions, leading lines, shallow editorial DOF (not bokeh blur)</li>
+    <li><strong>Trucks</strong>: realistic European delivery vehicles (Mercedes Sprinter / MAN / DAF style), no oversized American semi-trucks, no Tesla concept trucks</li>
+    <li><strong>People</strong>: workwear, hi-vis vests, real Eastern European craftsmen aesthetic — not modeli z Getty, dłonie spracowane, twarz w półcieniu lub od tyłu</li>
+    <li><strong>No text in images</strong> — wszystkie napisy/logo dodajemy później w Figmie/HTML</li>
+  </ul>
+</div>
+
+<nav class="toc">
+  <h2>Spis treści</h2>
+  <ol>
+    <li><a href="#p01">Hero main — index.html</a></li>
+    <li><a href="#p02">Hero — O nas</a></li>
+    <li><a href="#p03">Hero — Usługi</a></li>
+    <li><a href="#p04">Hero — Flota</a></li>
+    <li><a href="#p05">Hero — Jak to działa</a></li>
+    <li><a href="#p06">Hero — Kontakt</a></li>
+    <li><a href="#p07">Hero — Wycena</a></li>
+    <li><a href="#p08">Hero — Odprawa celna (Brexit)</a></li>
+    <li><a href="#p09">Flota — Bus 3.5t</a></li>
+    <li><a href="#p10">Flota — Solówka 7.2t</a></li>
+    <li><a href="#p11">Flota — Ciężarówka 18t</a></li>
+    <li><a href="#p12">Galeria realizacji — moment 1: pakowanie</a></li>
+    <li><a href="#p13">Galeria realizacji — moment 2: kierowca w kabinie</a></li>
+    <li><a href="#p14">Kierunki — generyczny hero podstrony kierunkowej</a></li>
+  </ol>
+</nav>
+
+<!-- ============ HERO MAIN ============ -->
+
+<div class="section-group">
+  <h2 class="section-group__title">Hero strony głównej</h2>
+
+<div class="prompt" id="p01">
+  <div class="prompt__head">
+    <span class="prompt__num">01</span>
+    <h3>Hero main — index.html</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/hero-trucks.jpg</strong> (obecny placeholder ~250KB)</div>
+  <div class="prompt__concept">Otwarcie trasy o świcie. Mgła, długa autostrada, sylwetka ciężarówki SLF na pierwszym planie. Cinematic wide-angle, dramatyczny kontrast nieba. Sugeruje "Europa od końca po koniec".</div>
+  <div class="prompt__specs">
+    <span class="spec">16:9 desktop hero</span>
+    <span class="spec">2400×1350 min</span>
+    <span class="spec">cinematic wide</span>
+    <span class="spec">cool tones</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "European motorway at dawn, low fog hugging asphalt. A black mid-size European delivery truck (Mercedes Actros / MAN TGX style) driving away from camera into the distance. Truck silhouette occupies bottom-right third, road perspective leads to vanishing point left of center.",
+  "lighting": "Pre-dawn blue hour, no sun visible yet, subtle warm horizon line. Headlights of approaching distant traffic create small pinpoint highlights. Practical truck rear lights cast minimal red glow on fog.",
+  "composition": "Wide-angle 24mm, shot from elevated highway bridge looking down at 30° angle. Rule of thirds: road in lower 2/3, moody sky in upper third. Leading lines from road markings.",
+  "color_palette": "Desaturated blues and slate grays, single warm amber accent from horizon, no other yellows. Cool, contemplative.",
+  "mood": "Quiet competence. Solo journey. Reliable industrial logistics. No people visible.",
+  "style": "Documentary editorial photography, Magnum agency aesthetic, Alex Webb meets Todd Hido. Subtle film grain. Low contrast. Anamorphic lens flare absent.",
+  "avoid": "Sunset, golden hour, lens flares, motion blur on truck body, American semi-trucks, palm trees, helicopter shot perfection, HDR processing, oversaturated sky"
+}</code></pre>
+</div>
+
+</div>
+
+<!-- ============ PAGE HEROS ============ -->
+
+<div class="section-group">
+  <h2 class="section-group__title">Page-hero — 7 podstron głównych</h2>
+
+<div class="prompt" id="p02">
+  <div class="prompt__head">
+    <span class="prompt__num">02</span>
+    <h3>Hero — O nas</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/hero/o-nas.jpg</strong></div>
+  <div class="prompt__concept">Dwóch dyspozytorów (czytaj: Łukasz i Sabina, ale anonimowo) omawiają trasę nad wydrukowaną mapą Europy. Nie patrzą w kamerę, nie pozują. Real moment.</div>
+  <div class="prompt__specs">
+    <span class="spec">16:9</span>
+    <span class="spec">documentary</span>
+    <span class="spec">indoor warm</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Two dispatch operators in a small logistics office, leaning over a paper road atlas of Europe spread on a worn wooden desk. One man (40s, short dark hair, plaid shirt) points at a route with pen. One woman (mid-30s, ponytail, simple sweater) is annotating a printed shipment list. Neither looks at camera.",
+  "lighting": "Single overhead industrial pendant lamp creating warm tungsten pool of light on desk. Outside daylight visible through window in background but muted. Mixed color temperature, very natural.",
+  "composition": "Shot from across the desk at 50mm, slight overhead angle. Map of Europe occupies foreground, hands and torsos of both people frame the upper portion. Faces partially out of frame or in profile.",
+  "color_palette": "Warm desk tones, faded paper yellows, dark plaid shirt, muted blues from window background. Touch of safety yellow on a hi-vis vest hanging on chair in background.",
+  "mood": "Trustworthy, hands-on, no-nonsense Polish/Central European logistics operation. Family business feel.",
+  "style": "Documentary editorial like Wall Street Journal long-form portrait, Jim Goldberg style. Real grain, no skin smoothing, no beauty retouching. Sharp on the map and hands, slightly soft on background.",
+  "avoid": "Open-plan glass office, MacBook on desk, posed handshake, smiling at camera, perfect teeth, generic corporate stock people"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p03">
+  <div class="prompt__head">
+    <span class="prompt__num">03</span>
+    <h3>Hero — Usługi</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/hero/uslugi.jpg</strong></div>
+  <div class="prompt__concept">Załadunek mebla do busa. Top-down angle, dwóch mężczyzn w hi-vis. Bezpieczeństwo + precyzja, nie "happy moving day".</div>
+  <div class="prompt__specs">
+    <span class="spec">16:9</span>
+    <span class="spec">action moment</span>
+    <span class="spec">elevated angle</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Top-down elevated view of two workers in yellow hi-vis vests carefully sliding a wrapped wooden wardrobe up a metal ramp into the back of a white European delivery van. The wardrobe is wrapped in furniture blankets and stretch film. A stack of moving cartons sits on the pavement nearby, already labeled with handwritten markers.",
+  "lighting": "Overcast soft daylight, no harsh shadows, slightly desaturated. Subtle ambient bounce from white van panel.",
+  "composition": "Shot from 1st-floor window or stepladder height, looking down at 60° angle. Van interior visible as dark rectangle, workers occupy left foreground, ramp leads diagonal from bottom-left to upper-right.",
+  "color_palette": "Asphalt grays, white van, accents of safety yellow on vests. Wardrobe blanket muted dark green. No bright primary colors elsewhere.",
+  "mood": "Methodical, professional, in-progress. Captured mid-motion, not posed.",
+  "style": "Editorial reportage, Wired magazine logistics feature aesthetic. Slight motion blur on workers' hands only, sharp on cargo. Natural color science.",
+  "avoid": "Workers smiling at camera, perfectly clean uniforms, branded American moving truck, suburban driveway with happy family, golden hour"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p04">
+  <div class="prompt__head">
+    <span class="prompt__num">04</span>
+    <h3>Hero — Flota</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/hero/flota.jpg</strong></div>
+  <div class="prompt__concept">3 pojazdy zaparkowane przed magazynem nocą. Symetryczne, podświetlone reflektorami od dołu. Premium fleet showcase.</div>
+  <div class="prompt__specs">
+    <span class="spec">16:9</span>
+    <span class="spec">night exterior</span>
+    <span class="spec">symmetrical</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Three European delivery vehicles parked side by side at night in front of a corrugated metal warehouse: left — small white Mercedes Sprinter-style cargo van (3.5t), center — medium 7.2t box truck, right — large 18t articulated box truck. All vehicles plain white without livery. Wide industrial pavement in foreground.",
+  "lighting": "Single warehouse floodlight from upper-right casts dramatic raking light across vehicles, leaving truck cabs in semi-shadow. Practical sodium-vapor security lamps add warm amber glow on the warehouse wall behind. Night sky deep blue, just visible.",
+  "composition": "Symmetric front-on three-quarter view, shot wide-angle 28mm from low position (camera at headlight height). Trucks fill the middle horizontal band, dramatic empty pavement in lower third, warehouse wall and small slice of night sky in upper third.",
+  "color_palette": "Cool blue night base, warm sodium yellow accents from security lights, white truck panels glowing. Black and yellow brand resonance without any branding visible.",
+  "mood": "Industrial pride. Ready for tomorrow's run. Solid, prepared, professional.",
+  "style": "Cinematic still from a Denis Villeneuve film. Long exposure feel without actual motion. Anamorphic-style wide composition. Deep blacks, no HDR.",
+  "avoid": "Daylight, parking lot full of unrelated cars, billboards, neon signs, glass-and-steel modern architecture, sunset, drone overhead shot"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p05">
+  <div class="prompt__head">
+    <span class="prompt__num">05</span>
+    <h3>Hero — Jak to działa</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/hero/jak-to-dziala.jpg</strong></div>
+  <div class="prompt__concept">Close-up rąk pakujących karton — taśma packing tape właśnie ucinana. Hard light, blue collar craftsmanship.</div>
+  <div class="prompt__specs">
+    <span class="spec">16:9</span>
+    <span class="spec">macro close-up</span>
+    <span class="spec">hard side light</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Tight close-up of two weathered hands sealing a brown corrugated cardboard moving carton with clear packing tape using a metal tape dispenser gun. The hands belong to a person wearing a faded gray work shirt, partial forearm visible with a small old tattoo. Box partially full, soft furniture pad sticking out top corner.",
+  "lighting": "Hard side light from low angle (warehouse ceiling LED panel raking across the scene), creating strong shadow contrast on the cardboard texture and hand veins. Background falls to near-black.",
+  "composition": "Macro 50mm at close distance, shallow depth of field — tape dispenser tip and gripping fingers in sharp focus, far edge of carton softens. Diagonal composition from upper-left to lower-right.",
+  "color_palette": "Cardboard browns, packing tape clear-amber tone, neutral gray shirt, deep shadow background. No bright accents.",
+  "mood": "Honest craftsmanship. The 'how' of careful packing. Care = work, not slogan.",
+  "style": "Reportage commercial photography, Patagonia worker portrait series aesthetic. Documentary realism. Natural skin texture, no smoothing, dust particles visible in light.",
+  "avoid": "Perfectly manicured hands, woman's hands with painted nails, glossy box, smiling face in background, kid helping with the box, golden hour window light"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p06">
+  <div class="prompt__head">
+    <span class="prompt__num">06</span>
+    <h3>Hero — Kontakt</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/hero/kontakt.jpg</strong></div>
+  <div class="prompt__concept">Dyspozytor przy laptopie w nocy — ekran z mapą Europy z trasami, telefon przy uchu. Aktywna dyspozytornia, nie generic office.</div>
+  <div class="prompt__specs">
+    <span class="spec">16:9</span>
+    <span class="spec">screen glow</span>
+    <span class="spec">profile angle</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Side profile of a logistics dispatcher (30s, casual button-down, headset on, not the spotlight) at a worn office desk in evening. Two monitor screens visible: one showing a simple route planning interface with map of Europe and route lines, other showing a spreadsheet of shipments. The dispatcher holds an old mobile phone to ear, taking notes on paper notepad with the other hand.",
+  "lighting": "Primary light source: cool blue glow from monitor screens illuminating the side of the face and chest. Warm desk lamp creates secondary amber rim from behind. Rest of room falls to dark.",
+  "composition": "Medium shot, 50mm, camera at desk height, profile view from the left. Monitors fill background right side, dispatcher in left two-thirds. Foreground edge of keyboard and coffee mug slightly out of focus.",
+  "color_palette": "Cool blue screen light dominates, warm amber from desk lamp as accent. Black/gray clothing, dark wood desk. No bright colors.",
+  "mood": "Quiet competence, late shift, real work. Available — someone is actually on the other end of that phone number.",
+  "style": "Editorial portrait, Bloomberg Businessweek profile aesthetic. Realistic monitor reflection in glasses or eyes. No screen text legible (avoid fake UI).",
+  "avoid": "Open-plan glass office, headset model influencer style, white Apple iMac and aesthetic neon, fake call center with 30 agents, smiling at camera"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p07">
+  <div class="prompt__head">
+    <span class="prompt__num">07</span>
+    <h3>Hero — Wycena</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/hero/wycena.jpg</strong></div>
+  <div class="prompt__concept">Top-down editorial still life: mapa Europy z zaznaczoną trasą markerem, kalkulator, lista mienia, kubek kawy. "Indywidualna wycena = ktoś faktycznie nad tym siedzi".</div>
+  <div class="prompt__specs">
+    <span class="spec">16:9 or 4:3</span>
+    <span class="spec">top-down still life</span>
+    <span class="spec">editorial flat</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Top-down editorial still life on a dark wooden desk surface. Centerpiece: a printed road atlas spread of Europe (Poland, Germany, UK visible) with a hand-drawn route in black marker connecting Krakow to Manchester. Adjacent: an old beige Casio calculator with realistic numbers on display, a handwritten inventory list on lined paper (illegible scribbles), a chunky black mobile phone, a half-empty espresso cup with stain rings, and a yellow safety vest folded at the corner of frame as brand-accent.",
+  "lighting": "Single overhead window light source from the upper-left creating soft directional shadow. No second source. Realistic shadow falloff.",
+  "composition": "Perfect overhead 90° top-down at 35mm equivalent. Atlas occupies center 60%, other objects scattered asymmetrically around edges. Strong negative space in lower-right corner.",
+  "color_palette": "Warm wood desk, paper whites and creams, single yellow safety vest as accent. Black objects (phone, marker, calculator) provide visual anchors. No bright colors.",
+  "mood": "Considered, manual, real. Not a SaaS calculator — a human pricing a real move.",
+  "style": "Kinfolk-adjacent but darker and less precious. New York Times Magazine style editorial flat lay. Real desk patina, coffee stain, paper crinkle.",
+  "avoid": "Modern MacBook, AirPods, plants in macrame holder, latte art coffee, sunlit minimalist beige aesthetic, perfectly aligned grid composition, fake numbers on calculator displaying $$$$"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p08">
+  <div class="prompt__head">
+    <span class="prompt__num">08</span>
+    <h3>Hero — Odprawa celna (Brexit)</h3>
+  </div>
+  <div class="prompt__where">→ <strong>nowe zdjęcie</strong>, dodać do <code>assets/img/hero/odprawa-celna.jpg</code> + zaktualizować <code>odprawa-celna.html</code> (dodać <code>page-hero--with-media</code>)</div>
+  <div class="prompt__concept">Concept still-life: brytyjski stempel celny na kopercie ToR1, paszport polski, koperta Royal Mail. Pre-Brexit/post-Brexit moment. Conceptual.</div>
+  <div class="prompt__specs">
+    <span class="spec">16:9 or 4:3</span>
+    <span class="spec">conceptual still life</span>
+    <span class="spec">document focus</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Tight overhead still life on a dark slate-gray surface: a Polish passport (burgundy cover with eagle visible) partially overlapping a printed customs declaration form with grid lines and stamped fields. An official-looking red ink stamp impression of an inkpad visible at corner. A small brass key on a key ring sits at the edge. No flags. No British/EU signage. Documents look authentic, slightly aged, with handwritten ink notes in cursive.",
+  "lighting": "Single hard light from upper-right creating long, definite shadows. Cool color temperature, almost steel-blue. Reminiscent of a customs office overhead fluorescent.",
+  "composition": "Top-down 90°, slightly tilted to dynamic 80° angle. Passport occupies left third diagonal, form occupies center-right. Heavy negative space in upper-left.",
+  "color_palette": "Deep slate gray base, burgundy passport, white-cream paper of form, single red stamp accent, brass key warmth. Restrained.",
+  "mood": "Serious bureaucracy, documents handled with care, the unglamorous reality of cross-border moves post-Brexit.",
+  "style": "Editorial conceptual photography, FT Weekend Magazine aesthetic. Sharp documentary realism with conceptual restraint.",
+  "avoid": "Union Jack flag, EU flag, Big Ben in background, smiling customs officer, glossy modern desk, plastic toy trucks, cliched 'British' tea cup, papier d'art"
+}</code></pre>
+</div>
+
+</div>
+
+<!-- ============ FLEET ============ -->
+
+<div class="section-group">
+  <h2 class="section-group__title">Flota — 3 typy pojazdów</h2>
+
+<div class="prompt" id="p09">
+  <div class="prompt__head">
+    <span class="prompt__num">09</span>
+    <h3>Flota — Bus do 3,5 tony</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/fleet-bus.png</strong> (obecnie 19MB placeholder)</div>
+  <div class="prompt__concept">Mercedes Sprinter-class biały dostawczak zaparkowany na wąskiej polskiej uliczce miejskiej, drzwi tyle otwarte, gotowy do załadunku. Sodium street light w tle.</div>
+  <div class="prompt__specs">
+    <span class="spec">4:3 vehicle card</span>
+    <span class="spec">1200×900 min</span>
+    <span class="spec">PNG transparent ok</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "A white European panel van (Mercedes Sprinter / Ford Transit style, ~3.5 ton class, 12-14 cubic meter cargo) parked along a narrow Central European residential street, rear cargo doors swung open showing empty clean cargo bay with anchor points and floor straps. Suggestion of late afternoon, a couple of old plane trees lining the street.",
+  "lighting": "Early dusk natural light, cool ambient with warm tungsten window glow starting to appear from background apartment buildings. No sun in frame. Single street lamp just beginning to flicker on.",
+  "composition": "Three-quarter rear angle from camera at shoulder height, 35mm lens. Van occupies right two-thirds of frame, opened door creates strong diagonal leading into the dark cargo bay. Quiet residential street recedes to left.",
+  "color_palette": "Clean white van body, cool blue-gray dusk, faint warm street light hint, brown brick apartment building backdrop. Minimal saturation.",
+  "mood": "Ready, accessible, urban-scale operation. Not flashy.",
+  "style": "Documentary commercial photography for a Polish/German publication. Realistic, no glossy car-show polish.",
+  "avoid": "Brand new showroom van with stickers, American Sprinter on Arizona desert, lifestyle 'van life' aesthetic, palm trees, magazine glamour shots, wet asphalt 'cinematic' look"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p10">
+  <div class="prompt__head">
+    <span class="prompt__num">10</span>
+    <h3>Flota — Solówka 7,2 tony</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/fleet-soloka.png</strong></div>
+  <div class="prompt__concept">Średnia 7.2t skrzyniowa ciężarówka MAN/DAF class, biała, w drodze za miastem na drodze wojewódzkiej, side profile.</div>
+  <div class="prompt__specs">
+    <span class="spec">4:3</span>
+    <span class="spec">side profile</span>
+    <span class="spec">moving moment</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "A white 7.2-ton European box truck (MAN TGL / DAF LF class, single rear axle, white aluminum cargo box with corrugated panels) driving on a tree-lined regional road through flat European countryside. Truck moving from right to left in frame, slight motion blur visible only on wheels.",
+  "lighting": "Overcast diffused daylight, slight directional from upper-left. Even and matter-of-fact, no drama.",
+  "composition": "Pure side profile, shot from across the road at 70mm telephoto from low angle (camera knee height). Truck fills center of frame, road and ditch in foreground, distant farmland in background.",
+  "color_palette": "Muted greens of summer fields, white truck body, gray road, overcast sky. Single small detail of yellow road sign in distance providing subtle brand color resonance.",
+  "mood": "Workhorse on a route. Solid, reliable, unglamorous.",
+  "style": "Old-school trade publication photography (Transport Manager magazine UK), British/Polish documentary realism. No drone shots, no Hollywood smoke.",
+  "avoid": "American Peterbilt, chrome bumper accessories, aggressive front grille, hill climb perspective, dramatic clouds, sunset glow, photographer's reflection in side mirror"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p11">
+  <div class="prompt__head">
+    <span class="prompt__num">11</span>
+    <h3>Flota — Ciężarówka 18 ton</h3>
+  </div>
+  <div class="prompt__where">→ podmienia <strong>assets/img/fleet-truck.png</strong></div>
+  <div class="prompt__concept">18-tonowiec przy rampie magazynowej, tylne drzwi otwarte, widać wnętrze pełne palet z zabezpieczonym ładunkiem. Industrial dignity.</div>
+  <div class="prompt__specs">
+    <span class="spec">4:3</span>
+    <span class="spec">3/4 rear angle</span>
+    <span class="spec">industrial</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "A white 18-ton European box truck (MAN TGS / Volvo FE rigid class) backed into a loading dock at a logistics warehouse. Rear roller door of cargo box is half-rolled-up showing palletized cargo strapped with red ratchet straps inside. Concrete dock plate bridges gap. A single forklift parked nearby, idle.",
+  "lighting": "Late afternoon directional sun raking across the warehouse facade from the right, creating long shadows on dock floor. Cargo interior in deep shadow with hint of warm tungsten interior light from cab.",
+  "composition": "Three-quarter rear view from camera at chest height, 35mm wide. Truck occupies center-left, dock infrastructure right, warehouse facade upper background.",
+  "color_palette": "White truck contrasts with weathered concrete grays. Red ratchet straps as visible accent inside cargo. Warm sun adds amber rim. Single yellow safety bollard at corner of dock.",
+  "mood": "End of day, work-in-progress, real logistics. Not a showroom shot.",
+  "style": "Industrial editorial photography, Edward Burtynsky scale and documentary precision. Real warehouse, real dock, no CGI cleanliness.",
+  "avoid": "Tesla Semi, electric concept truck, futuristic logistics center, pristine showroom, brand-new shiny chrome, drone helicopter shot, sunset rays through windows"
+}</code></pre>
+</div>
+
+</div>
+
+<!-- ============ GALERIA ============ -->
+
+<div class="section-group">
+  <h2 class="section-group__title">Galeria realizacji — momenty</h2>
+
+<div class="prompt" id="p12">
+  <div class="prompt__head">
+    <span class="prompt__num">12</span>
+    <h3>Galeria — Moment: pakowanie szkła</h3>
+  </div>
+  <div class="prompt__where">→ <strong>nowe</strong>, do dodania na o-nas / flota / nowa galeria. Brief klienta: "klient dał 3 zdjęcia — za mało".</div>
+  <div class="prompt__concept">Detail: ręce owijające szklany przedmiot folią bąbelkową. Skupienie, ostrożność, "We Handle With Care" w obrazie nie w słowie.</div>
+  <div class="prompt__specs">
+    <span class="spec">1:1 square / portrait</span>
+    <span class="spec">macro detail</span>
+    <span class="spec">soft window light</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Close-up macro shot of two weathered male hands carefully wrapping a wine glass in bubble wrap. The glass is half-wrapped, stem visible. On the wooden floor next to the worker: a roll of bubble wrap unspooled, a roll of brown packing paper, scissors with worn handles, three already-wrapped glasses standing upright.",
+  "lighting": "Soft directional window light from the left, slightly overcast quality. Practical secondary fill from a desk lamp out of frame on the right adds small warm bounce on the wrap. No flash.",
+  "composition": "45° downward angle, 50mm macro, very shallow depth of field on the wrapping hands. Background floor and other wrapped items soft. Composition follows visual triangle: hands top, glasses bottom, roll right.",
+  "color_palette": "Clear bubble wrap with subtle blue cast, brown packing paper, warm wood floor, neutral skin tones. No bright accents.",
+  "mood": "Slow, deliberate care. Mid-step in a long process. Anti-rush.",
+  "style": "Craft documentary, Cereal magazine restraint without preciousness. Real grain. No styled props placed too perfectly.",
+  "avoid": "Sparkling clean glass with rainbow refraction, lifestyle moving day with happy children, pinky-up posed elegance, lavender packing material as trendy color, painted nails"
+}</code></pre>
+</div>
+
+<div class="prompt" id="p13">
+  <div class="prompt__head">
+    <span class="prompt__num">13</span>
+    <h3>Galeria — Moment: kierowca w kabinie</h3>
+  </div>
+  <div class="prompt__where">→ <strong>nowe</strong>, do galerii. Driver portrait, real face, real moment.</div>
+  <div class="prompt__concept">Kierowca w kabinie ciężarówki, profil, patrzy w lusterko boczne. Reflection w lusterku łapie kawałek drogi. Cinematic environmental portrait.</div>
+  <div class="prompt__specs">
+    <span class="spec">3:2 or 4:3</span>
+    <span class="spec">environmental portrait</span>
+    <span class="spec">cabin interior</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Side profile of a middle-aged European truck driver (50s, gray-streaked beard, dark hoodie under high-vis safety vest, gentle but tired expression) sitting in the driver's seat of a modern European truck cab. He is checking his side mirror, head turned slightly toward the door. Hands visible on steering wheel. Through the windshield: blurred motion of road and gray skies suggesting movement, but truck is parked stationary.",
+  "lighting": "Natural daylight coming in through windshield as main, slightly cool. Subtle warm bounce from cabin dashboard light below. Mixed white balance for realism.",
+  "composition": "Medium-tight environmental portrait, 50mm, camera positioned in passenger seat shooting toward driver. Side mirror reflection visible in upper-right corner showing partial road behind. Steering wheel anchors lower-left.",
+  "color_palette": "Subdued — driver's gray clothing, yellow vest as singular accent, cool daylight, beige cabin interior. Driver's face naturally warm-toned.",
+  "mood": "Honest fatigue and competence. Someone you'd trust with your grandmother's piano. Real working person, not model.",
+  "style": "Environmental portrait, Steve McCurry meets contemporary trade press realism. Skin texture preserved, lines and pores visible.",
+  "avoid": "Movie-star handsome driver smiling for camera, hands-free pose, sunglasses, retouched face, American truck stop diner aesthetic, baseball cap with logo, dramatic country song lighting"
+}</code></pre>
+</div>
+
+</div>
+
+<!-- ============ KIERUNKI ============ -->
+
+<div class="section-group">
+  <h2 class="section-group__title">Kierunki — hero podstrony kierunkowej</h2>
+
+<div class="prompt" id="p14">
+  <div class="prompt__head">
+    <span class="prompt__num">14</span>
+    <h3>Kierunki — generyczny hero (21 podstron)</h3>
+  </div>
+  <div class="prompt__where">→ opcjonalnie do dodania jako tło hero w <strong>kierunki/*.html</strong> (obecnie hero bez zdjęcia). 1 generic plik dla wszystkich 21 kierunków: <code>assets/img/hero/kierunki.jpg</code></div>
+  <div class="prompt__concept">Wide cinematic — autostrada z drogowskazami międzynarodowymi. Conceptual, nie konkretny kraj — pasuje pod każdą podstronę kierunkową.</div>
+  <div class="prompt__specs">
+    <span class="spec">21:9 ultra-wide</span>
+    <span class="spec">cinematic horizon</span>
+    <span class="spec">brand-neutral</span>
+  </div>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+  "scene": "Wide cinematic view of a European motorway intersection at twilight, taken from a low position on the shoulder. Two distant European highway direction signs are visible above the road, mounted on overhead gantries — text intentionally illegible/blurred. A single distant white truck taillight glows in the distance lane. Truck on horizon, not in foreground.",
+  "lighting": "Pure blue hour, last horizon hint of warm orange at the lowest sky edge. Street lamps overhead just lit, casting soft pools of cool light on tarmac. Truck taillights add small warm pinpricks. No sun, no flares.",
+  "composition": "Ultra-wide 16mm anamorphic feel, camera at gravel-shoulder height, looking down the road. Strong vanishing point center-frame. Lower 1/3 dark road, middle 1/3 distant sign/horizon, upper 1/3 deep blue sky.",
+  "color_palette": "Dominated by deep blue and slate, with tiny warm amber accents (taillight + horizon line + sodium streetlamp). Almost monochromatic with two-color contrast.",
+  "mood": "On the way. Threshold. Anywhere in Europe — the route is the point, not the destination.",
+  "style": "Cinematic still photography, Roger Deakins influence. Heavy use of negative space. Could double as a Wim Wenders road movie still.",
+  "avoid": "Visible city names on signs, specific country flags or landmarks (no Eiffel, no Big Ben, no Brandenburg Gate), Hollywood sci-fi blue, drone shot, daytime, sunset golden hour cliche, neon billboards, palm trees"
+}</code></pre>
+</div>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  const code = btn.parentElement.querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 1500);
+  });
+}
+</script>
+
+</div>
+</body>
+</html>

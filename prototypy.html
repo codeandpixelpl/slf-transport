@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLF Transport — Prototypy hero + nav</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body { background: #050505; padding-bottom: 0; overflow-x: hidden; }
+
+  /* Tab switcher (top) */
+  .switcher {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: rgba(5, 5, 5, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .switcher__inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 32px;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .switcher__brand {
+    font-family: 'Anton', sans-serif;
+    font-size: 18px;
+    color: #FEAF03;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .switcher__group {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .switcher__label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  .tab {
+    padding: 6px 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+    color: rgba(255,255,255,0.65);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 200ms;
+  }
+  .tab:hover { color: #FFF; border-color: rgba(255,255,255,0.25); }
+  .tab.is-active {
+    background: #FEAF03;
+    color: #0A0A0A;
+    border-color: #FEAF03;
+    font-weight: 700;
+  }
+
+  /* Variant container */
+  .variant {
+    display: none;
+    padding-top: 64px;
+  }
+  .variant.is-active { display: block; }
+
+  /* Info card under variant */
+  .info-card {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+  .info-card__inner {
+    background: #141414;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+  }
+  .info-card__col h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .info-card__col.is-pro h3 { color: #00C853; }
+  .info-card__col.is-con h3 { color: #FF5252; }
+  .info-card__col.is-meta h3 { color: #FEAF03; }
+  .info-card__col ul {
+    list-style: none;
+  }
+  .info-card__col ul li {
+    padding: 8px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.7);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .info-card__col ul li:last-child { border: none; }
+  .info-card__col ul li::before {
+    content: '→ ';
+    color: rgba(255,255,255,0.4);
+    margin-right: 6px;
+  }
+  .info-card__col.is-pro ul li::before { content: '+ '; color: #00C853; }
+  .info-card__col.is-con ul li::before { content: '× '; color: #FF5252; }
+
+  /* ============ HERO B — split with photo ============ */
+  .hero-b {
+    padding: 100px 0 0;
+    background: #0A0A0A;
+  }
+  .hero-b__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    min-height: 580px;
+  }
+  .hero-b__text {
+    padding: 56px 32px 56px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 720px;
+  }
+  .hero-b__text .eyebrow { margin-bottom: 24px; }
+  .hero-b__text h1 {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(40px, 5vw, 72px);
+    line-height: 0.95;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .hero-b__text h1 .accent { color: #FEAF03; }
+  .hero-b__text p {
+    color: rgba(255,255,255,0.65);
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+  .hero-b__ctas {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .hero-b__media {
+    background:
+      linear-gradient(45deg, rgba(254,175,3,0.08) 0%, transparent 100%),
+      linear-gradient(135deg, #1c1c1c 0%, #0a0a0a 100%);
+    position: relative;
+    overflow: hidden;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-b__media::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(254,175,3,0.08) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+  .hero-b__placeholder {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 32px;
+  }
+  .hero-b__placeholder-ico {
+    width: 80px; height: 80px;
+    margin: 0 auto 16px;
+    border: 2px dashed rgba(254,175,3,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FEAF03;
+    font-family: 'Anton', sans-serif;
+    font-size: 32px;
+  }
+  .hero-b__placeholder-meta {
+    margin-top: 16px;
+    font-family: 'Anton', sans-serif;
+    color: rgba(255,255,255,0.85);
+    font-size: 18px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ============ HERO C — quote-first (inline form) ============ */
+  .hero-c {
+    padding: 100px 0 0;
+    background: #0A0A0A;
+  }
+  .hero-c__inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 64px 32px;
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 64px;
+    align-items: center;
+  }
+  .hero-c__text .eyebrow { margin-bottom: 20px; }
+  .hero-c__text h1 {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(40px, 5.5vw, 80px);
+    line-height: 0.95;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero-c__text h1 .accent { color: #FEAF03; }
+  .hero-c__text p {
+    color: rgba(255,255,255,0.65);
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+  .hero-c__benefits {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .hero-c__benefits li {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 14px;
+    color: #FFF;
+    font-weight: 500;
+  }
+  .hero-c__benefits li::before {
+    content: '✓';
+    width: 20px; height: 20px;
+    background: #FEAF03;
+    color: #0A0A0A;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .hero-c__form {
+    background: #141414;
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 36px 32px;
+    border-radius: 4px;
+    position: relative;
+  }
+  .hero-c__form::before {
+    content: '→ Wycena w 2 minuty';
+    position: absolute;
+    top: -1px; left: 24px;
+    transform: translateY(-50%);
+    background: #FEAF03;
+    color: #0A0A0A;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    font-weight: 700;
+  }
+  .hero-c__form h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 24px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .hero-c__form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .hero-c__form-row--single { grid-template-columns: 1fr; }
+  .hero-c__form .field { margin: 0; }
+  .hero-c__form label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .hero-c__form input,
+  .hero-c__form select {
+    background: #0A0A0A;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #FFF;
+    padding: 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    width: 100%;
+    border-radius: 4px;
+  }
+  .hero-c__form input:focus,
+  .hero-c__form select:focus {
+    outline: none;
+    border-color: #FEAF03;
+  }
+  .hero-c__form .btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 18px;
+    font-size: 15px;
+  }
+  .hero-c__form-hint {
+    text-align: center;
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+  }
+
+  /* ============ NAV variant 2 — phone visible ============ */
+  .nav-n2 {
+    position: relative;
+    top: auto; left: auto; right: auto;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    z-index: 50;
+  }
+  .nav-n2__logo img { height: 36px; }
+  .nav-n2__links {
+    display: flex;
+    gap: 28px;
+    margin-left: auto;
+  }
+  .nav-n2__links a {
+    font-size: 14px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .nav-n2__phone {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    color: #FFF;
+    text-decoration: none;
+    transition: all 200ms;
+  }
+  .nav-n2__phone:hover {
+    border-color: #FEAF03;
+    color: #FEAF03;
+  }
+  .nav-n2__phone-ico {
+    width: 28px; height: 28px;
+    background: #FEAF03;
+    color: #0A0A0A;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .nav-n2__phone-num {
+    font-family: 'Anton', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+  }
+  .nav-n2__phone-meta {
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-n2__phone-meta .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+  }
+  .nav-n2__cta {
+    background: #FEAF03;
+    color: #0A0A0A;
+    padding: 10px 18px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+
+  /* Section label inside variants */
+  .variant-label {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 32px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: #FEAF03;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 900px) {
+    .hero-b__inner, .hero-c__inner { grid-template-columns: 1fr; }
+    .hero-b__text { padding: 32px 20px; }
+    .hero-c__inner { padding: 32px 20px; gap: 32px; }
+    .info-card__inner { grid-template-columns: 1fr; gap: 24px; }
+    .switcher__inner { padding: 12px 20px; gap: 16px; }
+    .nav-n2 { padding: 12px 20px; gap: 12px; flex-wrap: wrap; }
+    .nav-n2__links { display: none; }
+    .nav-n2__phone-meta .k { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TAB SWITCHER -->
+<div class="switcher">
+  <div class="switcher__inner">
+    <span class="switcher__brand">SLF<span style="color:#FFF;">. prototypy</span></span>
+    <span class="switcher__group">
+      <span class="switcher__label">Hero:</span>
+      <button class="tab is-active" data-variant="hero-a">A · Baseline</button>
+      <button class="tab" data-variant="hero-b">B · Split + foto</button>
+      <button class="tab" data-variant="hero-c">C · Wycena inline</button>
+    </span>
+    <span class="switcher__group">
+      <span class="switcher__label">Nav:</span>
+      <button class="tab is-active" data-variant="nav-n1">N1 · Aktualny</button>
+      <button class="tab" data-variant="nav-n2">N2 · Telefon w nav</button>
+    </span>
+  </div>
+</div>
+
+<!-- ====== HERO A — Baseline (current) ====== -->
+<section class="variant is-active" id="hero-a">
+  <div class="variant-label">→ Hero A · Baseline (aktualna wersja)</div>
+
+  <!-- nav (zmienia się w zależności od tab nav) -->
+  <div class="nav-slot"></div>
+
+  <section class="hero" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div class="hero__inner">
+        <span class="eyebrow">Transport międzynarodowy · cała Europa</span>
+        <h1>Transport i przeprowadzki<br><span class="accent">międzynarodowe</span></h1>
+        <p class="hero__sub">Bezpieczny transport na terenie całej Europy</p>
+        <p class="hero__desc">
+          Profesjonalne przeprowadzki międzynarodowe dla osób prywatnych i firm.
+          Organizujemy transport mienia, mebli, sprzętu oraz rzeczy osobistych
+          szybko, terminowo i bezpiecznie.
+        </p>
+        <ul class="hero__benefits">
+          <li class="hero__benefit"><span class="check">✓</span>Szybkie terminy</li>
+          <li class="hero__benefit"><span class="check">✓</span>Transport door-to-door</li>
+          <li class="hero__benefit"><span class="check">✓</span>Pomoc przy załadunku i rozładunku</li>
+          <li class="hero__benefit"><span class="check">✓</span>Indywidualna wycena</li>
+        </ul>
+        <div class="hero__ctas">
+          <a href="wycena.html" class="btn btn--primary btn--lg">Darmowa wycena <span class="arrow">→</span></a>
+          <a href="tel:+48698753941" class="btn btn--ghost btn--lg">☏ +48 698 753 941</a>
+        </div>
+        <p class="hero__support" style="margin-top: 16px; font-family: var(--font-m); font-size: 12px; letter-spacing: 0.06em; color: var(--text-3);">→ ODPOWIADAMY W CIĄGU 24h · BEZ ZOBOWIĄZAŃ</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="info-card">
+    <div class="info-card__inner">
+      <div class="info-card__col is-pro">
+        <h3>+ Plusy</h3>
+        <ul>
+          <li>Szybko ładuje — brak assetów</li>
+          <li>Działa zanim klient dostarczy zdjęcia floty</li>
+          <li>4 benefity widoczne above-the-fold</li>
+          <li>2 CTA = wybór formularz lub telefon</li>
+          <li>Czysty, profesjonalny, nie rozprasza</li>
+        </ul>
+      </div>
+      <div class="info-card__col is-con">
+        <h3>× Minusy</h3>
+        <ul>
+          <li>Brak wow-factor wizualnego</li>
+          <li>Nie pokazuje produktu (pojazdów, ekipy)</li>
+          <li>Trudniej wyróżnić się od konkurencji</li>
+          <li>Wymaga drugiego scrolla żeby zobaczyć flotę</li>
+        </ul>
+      </div>
+      <div class="info-card__col is-meta">
+        <h3>→ Kiedy używać</h3>
+        <ul>
+          <li>MVP — przed otrzymaniem zdjęć</li>
+          <li>Klient priorytetuje czytelność i prostotę</li>
+          <li>Reklamy Google Ads — landing page</li>
+          <li>Baseline do porównania z innymi</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== HERO B — Split with photo ====== -->
+<section class="variant" id="hero-b">
+  <div class="variant-label">→ Hero B · Split 50/50 ze zdjęciem floty</div>
+
+  <div class="nav-slot"></div>
+
+  <section class="hero-b">
+    <div class="hero-b__inner">
+      <div class="hero-b__text">
+        <span class="eyebrow">Transport · cała Europa</span>
+        <h1>Transport<br>i przeprowadzki<br><span class="accent">międzynarodowe</span></h1>
+        <p>Profesjonalne przeprowadzki dla osób prywatnych i firm. Door-to-door w 12 krajach Europy — szybko, terminowo, bezpiecznie.</p>
+        <div class="hero-b__ctas">
+          <a href="wycena.html" class="btn btn--primary btn--lg">Darmowa wycena <span class="arrow">→</span></a>
+          <a href="tel:+48698753941" class="btn btn--ghost btn--lg">☏ Zadzwoń</a>
+        </div>
+      </div>
+      <div class="hero-b__media">
+        <div class="hero-b__placeholder">
+          <div class="hero-b__placeholder-ico">↗</div>
+          → Zdjęcie floty SLF<br>(bus / solówka / ciężarówka w trasie)
+          <div class="hero-b__placeholder-meta">→ assets/img/hero-fleet.jpg</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="info-card">
+    <div class="info-card__inner">
+      <div class="info-card__col is-pro">
+        <h3>+ Plusy</h3>
+        <ul>
+          <li>Wizualny wow — emocje od razu</li>
+          <li>„Widać że to prawdziwa firma"</li>
+          <li>Krótszy copy = łatwiejsze do skanowania</li>
+          <li>Zdjęcie sprzedaje samo</li>
+          <li>Mocno działa w branży transportowej</li>
+        </ul>
+      </div>
+      <div class="info-card__col is-con">
+        <h3>× Minusy</h3>
+        <ul>
+          <li>Wymaga dobrej jakości zdjęć (klient musi dostarczyć)</li>
+          <li>Bez zdjęć = placeholder szary box</li>
+          <li>Wolniejsze ładowanie (heavy image)</li>
+          <li>Mniej miejsca na benefity</li>
+          <li>Mobile: zdjęcie pod tekstem = niżej</li>
+        </ul>
+      </div>
+      <div class="info-card__col is-meta">
+        <h3>→ Kiedy używać</h3>
+        <ul>
+          <li>Mamy 2-3 dobre zdjęcia floty</li>
+          <li>Klient chce się wyróżnić wizualnie</li>
+          <li>Budujemy „premium" feeling</li>
+          <li>Idealne po `/assets-checklist`</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== HERO C — Quote inline ====== -->
+<section class="variant" id="hero-c">
+  <div class="variant-label">→ Hero C · Mini-form wyceny już w hero</div>
+
+  <div class="nav-slot"></div>
+
+  <section class="hero-c">
+    <div class="hero-c__inner">
+      <div class="hero-c__text">
+        <span class="eyebrow">Cała Europa · door-to-door</span>
+        <h1>Przeprowadzki <span class="accent">międzynarodowe</span></h1>
+        <p>Profesjonalna obsługa od pakowania po wniesienie. Szybko, terminowo, bezpiecznie.</p>
+        <ul class="hero-c__benefits">
+          <li>Indywidualna wycena w 24h</li>
+          <li>Pomoc na każdym etapie</li>
+          <li>12 krajów Europy + inne</li>
+          <li>Od kilku kartonów po pełną firmę</li>
+        </ul>
+      </div>
+
+      <form class="hero-c__form" onsubmit="event.preventDefault(); window.location.href='wycena.html';">
+        <h3>Wyceń przeprowadzkę</h3>
+        <div class="hero-c__form-row">
+          <div class="field">
+            <label>Skąd (kraj)</label>
+            <select><option>Polska</option><option>Niemcy</option><option>Holandia</option><option>Wielka Brytania</option><option>Inny</option></select>
+          </div>
+          <div class="field">
+            <label>Dokąd (kraj)</label>
+            <select><option>Niemcy</option><option>Holandia</option><option>Belgia</option><option>Wielka Brytania</option><option>Inny</option></select>
+          </div>
+        </div>
+        <div class="hero-c__form-row">
+          <div class="field">
+            <label>Termin</label>
+            <input type="date">
+          </div>
+          <div class="field">
+            <label>Telefon</label>
+            <input type="tel" placeholder="+48 ...">
+          </div>
+        </div>
+        <button type="submit" class="btn btn--primary">Sprawdź wycenę <span class="arrow">→</span></button>
+        <p class="hero-c__form-hint">→ Bezpłatnie · Bez zobowiązań · Odpowiedź w 24h</p>
+      </form>
+    </div>
+  </section>
+
+  <div class="info-card">
+    <div class="info-card__inner">
+      <div class="info-card__col is-pro">
+        <h3>+ Plusy</h3>
+        <ul>
+          <li>Konwersja na pierwszym ekranie</li>
+          <li>Klient od razu rozumie co dostanie</li>
+          <li>Niska bariera wejścia (4 pola)</li>
+          <li>Idealne pod Google Ads (high-intent leads)</li>
+          <li>Mocny sygnał „działamy teraz"</li>
+        </ul>
+      </div>
+      <div class="info-card__col is-con">
+        <h3>× Minusy</h3>
+        <ul>
+          <li>Gęsto wizualnie — mniej „premium"</li>
+          <li>Niektórzy klienci nie lubią od razu formy</li>
+          <li>Mini-form daje gorsze dane niż pełna wycena</li>
+          <li>Klikają i tak zwykle bo dochodzą do /wycena</li>
+          <li>Mniej miejsca na storytelling marki</li>
+        </ul>
+      </div>
+      <div class="info-card__col is-meta">
+        <h3>→ Kiedy używać</h3>
+        <ul>
+          <li>Cel: maksymalna konwersja</li>
+          <li>Klient ma silny brand-recognition</li>
+          <li>Główny ruch z Google Ads</li>
+          <li>Można testować jako wariant B do A/B</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== NAV TEMPLATES ====== -->
+<template id="tpl-nav-n1">
+  <header class="header" style="position: relative; top: auto;">
+    <div class="container">
+      <div class="header__inner">
+        <a href="index.html" class="header__logo"><img src="assets/logo/w.svg" alt="SLF Transport"></a>
+        <nav class="nav nav--desktop">
+          <a href="o-nas.html" class="nav__link">O nas</a>
+          <a href="uslugi.html" class="nav__link">Usługi</a>
+          <a href="flota.html" class="nav__link">Flota</a>
+          <a href="jak-to-dziala.html" class="nav__link">Jak to działa</a>
+          <a href="kontakt.html" class="nav__link">Kontakt</a>
+          <span class="nav__lang"><span class="is-active">PL</span><span class="sep">·</span><a href="#">EN</a></span>
+          <a href="wycena.html" class="btn btn--primary">Darmowa wycena <span class="arrow">→</span></a>
+        </nav>
+      </div>
+    </div>
+  </header>
+</template>
+
+<template id="tpl-nav-n2">
+  <nav class="nav-n2">
+    <a href="index.html" class="nav-n2__logo"><img src="assets/logo/w.svg" alt="SLF"></a>
+    <div class="nav-n2__links">
+      <a href="o-nas.html">O nas</a>
+      <a href="uslugi.html">Usługi</a>
+      <a href="flota.html">Flota</a>
+      <a href="kontakt.html">Kontakt</a>
+    </div>
+    <a href="tel:+48698753941" class="nav-n2__phone">
+      <div class="nav-n2__phone-ico">☏</div>
+      <div class="nav-n2__phone-meta">
+        <span class="k">→ Łukasz · 24/7</span>
+        <span class="nav-n2__phone-num">+48 698 753 941</span>
+      </div>
+    </a>
+    <a href="wycena.html" class="nav-n2__cta">Darmowa wycena →</a>
+  </nav>
+</template>
+
+<!-- ====== NAV INFO CARDS ====== -->
+<section class="variant" id="nav-info">
+  <div class="variant-label">→ Porównanie nav N1 vs N2</div>
+  <div class="info-card">
+    <div class="info-card__inner" style="grid-template-columns: 1fr 1fr;">
+      <div>
+        <h3 style="font-family: 'Anton', sans-serif; font-size: 18px; letter-spacing: 0.04em; text-transform: uppercase; color: #FEAF03; margin-bottom: 16px;">N1 · Aktualny</h3>
+        <div class="info-card__col is-pro" style="margin-bottom: 16px;"><ul>
+          <li>Maksymalna ilość linków informacyjnych (5)</li>
+          <li>Czysty, „premium" wygląd</li>
+          <li>Standard branżowy — łatwy do skanowania</li>
+          <li>Multi-language switcher widoczny</li>
+        </ul></div>
+        <div class="info-card__col is-con"><ul>
+          <li>Telefon ukryty (klik w „Kontakt" → niżej)</li>
+          <li>Mobile: hamburger ukrywa wszystko</li>
+        </ul></div>
+      </div>
+      <div>
+        <h3 style="font-family: 'Anton', sans-serif; font-size: 18px; letter-spacing: 0.04em; text-transform: uppercase; color: #FEAF03; margin-bottom: 16px;">N2 · Telefon w nav</h3>
+        <div class="info-card__col is-pro" style="margin-bottom: 16px;"><ul>
+          <li>Telefon widoczny od razu (starsi klienci)</li>
+          <li>+1 trust signal („oddzwoń kiedy chcesz")</li>
+          <li>Mobile: telefon dostępny 1-klikiem (no hamburger)</li>
+          <li>Wyższa konwersja telefoniczna</li>
+        </ul></div>
+        <div class="info-card__col is-con"><ul>
+          <li>Mniej miejsca = mniej linków (4 vs 5)</li>
+          <li>Brak PL/EN switcher inline (przeniesione)</li>
+          <li>Bardziej „aggressive sales" feel</li>
+          <li>Zajmuje 2× tyle wysokości w sticky</li>
+        </ul></div>
+      </div>
+    </div>
+    <div style="max-width: 1280px; margin: 24px auto 0; padding: 0 32px;">
+      <div style="background: rgba(254,175,3,0.08); border-left: 3px solid #FEAF03; padding: 20px 24px; font-size: 14px; color: rgba(255,255,255,0.85); line-height: 1.6;">
+        <strong style="color: #FEAF03; font-family: 'Anton', sans-serif; letter-spacing: 0.04em;">→ REKOMENDACJA:</strong>
+        Trzymać <strong>N1 jako baseline</strong> (czystszy, premium-feel) i dodać <strong>numer telefonu w mobile bottom sticky CTA</strong> — to daje korzyść N2 (telefon zawsze widoczny) bez sacrifikowania klarowności desktop nav. Faktycznie tak już mamy zaimplementowane w produkcji.
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const variants = document.querySelectorAll('.variant');
+  const navTpl1 = document.getElementById('tpl-nav-n1');
+  const navTpl2 = document.getElementById('tpl-nav-n2');
+
+  let currentHero = 'hero-a';
+  let currentNav = 'nav-n1';
+
+  function renderNav() {
+    const slots = document.querySelectorAll('.nav-slot');
+    const tpl = currentNav === 'nav-n1' ? navTpl1 : navTpl2;
+    slots.forEach(slot => {
+      slot.innerHTML = '';
+      slot.appendChild(tpl.content.cloneNode(true));
+    });
+  }
+
+  function showVariant(id) {
+    variants.forEach(v => v.classList.remove('is-active'));
+    // hero-c gets active + nav-info shows
+    document.getElementById(id)?.classList.add('is-active');
+    if (id.startsWith('hero-')) {
+      document.getElementById('nav-info')?.classList.remove('is-active');
+    }
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const v = tab.dataset.variant;
+      if (v.startsWith('hero-')) {
+        // Deselect other hero tabs
+        document.querySelectorAll('.tab[data-variant^="hero-"]').forEach(t => t.classList.remove('is-active'));
+        tab.classList.add('is-active');
+        currentHero = v;
+        showVariant(v);
+      } else if (v.startsWith('nav-')) {
+        document.querySelectorAll('.tab[data-variant^="nav-"]').forEach(t => t.classList.remove('is-active'));
+        tab.classList.add('is-active');
+        currentNav = v;
+        renderNav();
+      }
+    });
+  });
+
+  renderNav();
+</script>
+
+</body>
+</html>

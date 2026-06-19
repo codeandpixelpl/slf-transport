@@ -1,11 +1,31 @@
 .DS_Store
-Thumbs.db
-*.psd
-*.ai
-*.fig
-*.sketch
-*.log
-node_modules/
-.env
+.AppleDouble
+.LSOverride
+._*
+
+_delivery-git/
+
+# Surowe materiały od klienta (33MB+ raw assets, nie idą do repo)
+00 - Assets/
+
+# Wewnętrzne Claude
+.claude/
+
+# Editors
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Env / secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Node (na wypadek przyszłych narzędzi)
+node_modules/
+package-lock.json
